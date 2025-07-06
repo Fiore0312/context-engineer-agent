@@ -51,11 +51,7 @@ Production-ready project with automatic Git backup
 
 ```bash
 # Clone the repository
-<<<<<<< HEAD
 git clone https://github.com/Fiore0312/context-engineer-agent
-=======
-gh repo clone Fiore0312/context-engineer-agent
->>>>>>> 80551e1aa47217602712b54e51e32fb2aa81b935
 cd context-engineer-agent
 
 # Install dependencies

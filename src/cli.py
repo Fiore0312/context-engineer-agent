@@ -248,8 +248,6 @@ def templates(ctx):
 def menu(ctx):
     """Avvia il menu interattivo principale"""
     try:
-        show_welcome_message()
-        
         while True:
             show_main_menu()
             choice = get_menu_choice()

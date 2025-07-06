@@ -41,7 +41,7 @@ def show_ascii_art():
     return ascii_art
 
 def show_main_menu():
-    """Display the main menu with ASCII art and options"""
+    """Display the main menu with ASCII art and options using inquirer"""
     
     # Clear screen
     os.system('clear' if os.name == 'posix' else 'cls')
@@ -54,38 +54,56 @@ def show_main_menu():
     subtitle = Text("🤖 AI-Powered Context Engineering Assistant", style="bold white")
     console.print(Align.center(subtitle))
     console.print()
-    
-    # Show menu options
-    menu_options = """
-┌─────────────────────────────────────────────────────────────────┐
-│  1. Nuovo Progetto                                              │
-│  2. Apri Progetto                                               │
-│  3. Lista Comandi                                               │
-│                                                                 │
-│  Seleziona un'opzione (1-3):                                    │
-└─────────────────────────────────────────────────────────────────┘
-"""
-    console.print(menu_options, style="bold green")
 
 def get_menu_choice():
-    """Get user's menu choice with validation"""
+    """Get user's menu choice using inquirer for better UX"""
     
-    while True:
-        try:
-            choice = input().strip()
-            
-            if choice in ['1', '2', '3']:
-                return int(choice)
-            elif choice.lower() in ['q', 'quit', 'exit']:
-                console.print("\n👋 Arrivederci!", style="bold yellow")
-                return None
-            else:
-                console.print("❌ Opzione non valida. Seleziona 1, 2, o 3 (o 'q' per uscire):", style="bold red")
-        except KeyboardInterrupt:
-            console.print("\n\n👋 Arrivederci!", style="bold yellow")
+    import inquirer
+    
+    try:
+        questions = [
+            inquirer.List('action',
+                         message="Seleziona un'opzione",
+                         choices=[
+                             ('🆕 Nuovo Progetto', 1),
+                             ('📂 Apri Progetto', 2), 
+                             ('📋 Lista Comandi', 3),
+                             ('❌ Esci', None)
+                         ],
+                         )
+        ]
+        
+        answers = inquirer.prompt(questions)
+        
+        if answers is None:  # User pressed Ctrl+C
+            console.print("\n👋 Arrivederci!", style="bold yellow")
             return None
-        except Exception as e:
-            console.print(f"❌ Errore: {e}. Riprova:", style="bold red")
+            
+        return answers['action']
+        
+    except KeyboardInterrupt:
+        console.print("\n👋 Arrivederci!", style="bold yellow")
+        return None
+    except Exception as e:
+        console.print(f"❌ Errore nel menu: {e}", style="bold red")
+        # Fallback to simple input
+        console.print("Usando menu semplificato...")
+        console.print("1. Nuovo Progetto")
+        console.print("2. Apri Progetto") 
+        console.print("3. Lista Comandi")
+        console.print("q. Esci")
+        
+        while True:
+            try:
+                choice = input("Seleziona (1-3, q): ").strip().lower()
+                if choice in ['1', '2', '3']:
+                    return int(choice)
+                elif choice in ['q', 'quit', 'exit']:
+                    return None
+                else:
+                    console.print("❌ Opzione non valida", style="bold red")
+            except KeyboardInterrupt:
+                return None
 
 def show_welcome_message():
     """Show welcome message and instructions"""
