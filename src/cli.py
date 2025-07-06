@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from agent import ContextEngineerAgent
 from utils import setup_logging, print_status, print_error, print_success
-from interface import show_main_menu, get_menu_choice
+from interface import show_main_menu, get_menu_choice, show_welcome_message, show_command_list, show_next_steps
 from interface import ask_new_project_questions, ask_existing_project_questions
 
 
@@ -300,11 +300,7 @@ def handle_new_project(ctx):
             if answers.get('use_git_integration'):
                 next_steps.append("Configura l'integrazione Git con 'python -m src.cli setup-git'")
             
-            # Show next steps
-            if next_steps:
-                print("\n📋 Prossimi passi suggeriti:")
-                for step in next_steps:
-                    print(f"  • {step}")
+            show_next_steps(next_steps)
         else:
             print_error(f"❌ Creazione progetto fallita: {result.get('error', 'Unknown error')}")
             
@@ -346,11 +342,7 @@ def handle_open_project(ctx):
         if answers.get('generate_improvement_plan'):
             next_steps.append("Genera un piano di miglioramento dettagliato")
         
-        # Show next steps
-        if next_steps:
-            print("\n📋 Prossimi passi suggeriti:")
-            for step in next_steps:
-                print(f"  • {step}")
+        show_next_steps(next_steps)
         
     except Exception as e:
         print_error(f"❌ Errore durante apertura progetto: {str(e)}")
