@@ -16,12 +16,23 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Configure logging for better debugging
+# Configure ultra-detailed logging for debugging crashes
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('/tmp/aigenio_debug.log', mode='a')
+    ]
 )
 logger = logging.getLogger(__name__)
+
+# Also log to console with colors
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter('ℹ️  %(message)s')
+console_handler.setFormatter(console_formatter)
+logger.addHandler(console_handler)
 
 from agent import ContextEngineerAgent
 from utils import setup_logging, print_status, print_error, print_success
@@ -277,12 +288,18 @@ def menu(ctx):
 
 
 def handle_new_project(ctx):
-    """Gestisce la creazione di un nuovo progetto"""
+    """Gestisce la creazione di un nuovo progetto con logging ultra-dettagliato"""
     try:
-        logger.info("Starting new project creation workflow")
+        logger.info("🚀 INIZIO workflow creazione nuovo progetto")
         
         # Ask comprehensive questions
-        answers = ask_new_project_questions()
+        try:
+            logger.info("🔍 STEP A: Raccogliendo risposte utente...")
+            answers = ask_new_project_questions()
+            logger.info("✅ STEP A completato")
+        except Exception as e:
+            logger.error(f"💥 STEP A FALLITO: {e}")
+            raise
         
         # Check if user cancelled or answers is None
         if answers is None:
@@ -296,24 +313,53 @@ def handle_new_project(ctx):
             logger.error(f"Invalid answers format: {type(answers)}")
             return
         
-        logger.info(f"Received {len(answers)} answers from user")
+        logger.info(f"✅ Ricevute {len(answers)} risposte valide dall'utente")
+        logger.debug(f"Answers keys: {list(answers.keys())}")
         
         # Get project path
-        project_path = click.prompt("Inserisci il percorso del progetto", type=click.Path())
-        project_path = Path(project_path).resolve()
+        try:
+            logger.info("🔍 STEP B: Raccogliendo path progetto...")
+            project_path = click.prompt("Inserisci il percorso del progetto", type=click.Path())
+            project_path = Path(project_path).resolve()
+            logger.info(f"✅ STEP B: Path ricevuto: {project_path}")
+        except Exception as e:
+            logger.error(f"💥 STEP B FALLITO: {e}")
+            raise
         
         # Create project directory if it doesn't exist
-        project_path.mkdir(parents=True, exist_ok=True)
+        try:
+            logger.info("🔍 STEP C: Creando directory progetto...")
+            project_path.mkdir(parents=True, exist_ok=True)
+            logger.info(f"✅ STEP C: Directory pronta: {project_path}")
+        except Exception as e:
+            logger.error(f"💥 STEP C FALLITO: {e}")
+            raise
         
         # Setup project with answers
-        logger.info(f"Setting up project at: {project_path}")
-        agent = ContextEngineerAgent(verbose=ctx.obj['verbose'])
-        
-        # Extract template safely
-        template = answers.get('template', None)
-        logger.info(f"Using template: {template}")
-        
-        result = agent.setup_project(project_path, template=template)
+        try:
+            logger.info(f"🔍 STEP D: Inizializzando agent...")
+            agent = ContextEngineerAgent(verbose=ctx.obj['verbose'])
+            logger.info(f"✅ STEP D: Agent inizializzato")
+            
+            # Extract template safely
+            template = answers.get('template', None)
+            logger.info(f"📋 Template estratto: {template}")
+            
+            logger.info(f"🔍 STEP E: Avviando setup progetto...")
+            logger.info(f"   Project path: {project_path}")
+            logger.info(f"   Template: {template}")
+            logger.info(f"   Answers count: {len(answers)}")
+            
+            result = agent.setup_project(project_path, template=template)
+            
+            logger.info(f"✅ STEP E: Setup progetto completato")
+            logger.debug(f"Result keys: {list(result.keys()) if result else 'None'}")
+            
+        except Exception as e:
+            logger.error(f"💥 STEP D/E FALLITO: {e}")
+            import traceback
+            logger.error(f"Traceback completo: {traceback.format_exc()}")
+            raise
         
         if result and result.get('status') == 'success':
             print_success("✅ Progetto creato con successo!")

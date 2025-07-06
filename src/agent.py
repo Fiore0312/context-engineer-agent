@@ -74,37 +74,87 @@ class ContextEngineerAgent:
         save_json(db_path, self.projects_db)
     
     def setup_project(self, project_path: Path, template: Optional[str] = None) -> Dict[str, Any]:
-        """Setup completo Context Engineering per progetto"""
+        """Setup completo Context Engineering per progetto con logging dettagliato"""
         try:
-            self.logger.info(f"Avvio setup per progetto: {project_path}")
+            self.logger.info(f"🚀 INIZIO setup per progetto: {project_path}")
+            self.logger.info(f"📋 Template richiesto: {template}")
+            
+            # Verifica path e permessi
+            if not project_path.exists():
+                project_path.mkdir(parents=True, exist_ok=True)
+                self.logger.info(f"📁 Directory creata: {project_path}")
+            
+            if not os.access(project_path, os.W_OK):
+                raise PermissionError(f"Nessun permesso di scrittura: {project_path}")
+            
+            self.logger.info(f"✅ Permessi verificati")
             
             # 1. Analizza struttura e tecnologie
-            analysis = self.analyze_project(project_path)
+            try:
+                self.logger.info(f"🔍 STEP 1: Avvio analisi progetto...")
+                analysis = self.analyze_project(project_path)
+                self.logger.info(f"✅ STEP 1 completato: {analysis.get('type', 'unknown')}")
+            except Exception as e:
+                self.logger.error(f"💥 STEP 1 FALLITO: {e}")
+                raise
             
             # 2. Genera CLAUDE.md appropriato
-            claude_config = self.claude_generator.generate(analysis, template)
-            
-            # 3. Crea file CLAUDE.md
-            claude_path = project_path / 'CLAUDE.md'
-            claude_path.write_text(claude_config['content'])
+            try:
+                self.logger.info(f"🔍 STEP 2: Generando CLAUDE.md...")
+                claude_config = self.claude_generator.generate(analysis, template)
+                self.logger.info(f"✅ STEP 2a: Config generata")
+                
+                # 3. Crea file CLAUDE.md
+                claude_path = project_path / 'CLAUDE.md'
+                claude_path.write_text(claude_config['content'])
+                self.logger.info(f"✅ STEP 2b: CLAUDE.md scritto ({claude_path.stat().st_size} bytes)")
+            except Exception as e:
+                self.logger.error(f"💥 STEP 2 FALLITO: {e}")
+                raise
             
             # 3.5. Genera INITIAL.md di default per il progetto
-            initial_content = self.initial_generator.generate(
-                analysis, 
-                f"Setup iniziale progetto {analysis['name']}", 
-                template
-            )
-            initial_path = project_path / 'INITIAL.md'
-            initial_path.write_text(initial_content['content'])
+            try:
+                self.logger.info(f"🔍 STEP 3: Generando INITIAL.md...")
+                initial_content = self.initial_generator.generate(
+                    analysis, 
+                    f"Setup iniziale progetto {analysis['name']}", 
+                    template
+                )
+                self.logger.info(f"✅ STEP 3a: Content generato")
+                
+                initial_path = project_path / 'INITIAL.md'
+                initial_path.write_text(initial_content['content'])
+                self.logger.info(f"✅ STEP 3b: INITIAL.md scritto ({initial_path.stat().st_size} bytes)")
+            except Exception as e:
+                self.logger.error(f"💥 STEP 3 FALLITO: {e}")
+                raise
             
             # 4. Crea struttura directories se necessaria
-            self._create_project_structure(project_path, analysis)
+            try:
+                self.logger.info(f"🔍 STEP 4: Creando struttura directory...")
+                self._create_project_structure(project_path, analysis)
+                self.logger.info(f"✅ STEP 4 completato")
+            except Exception as e:
+                self.logger.error(f"💥 STEP 4 FALLITO: {e}")
+                raise
             
             # 5. Copia esempi rappresentativi
-            examples = self._copy_examples(project_path, analysis)
+            try:
+                self.logger.info(f"🔍 STEP 5: Copiando esempi...")
+                examples = self._copy_examples(project_path, analysis)
+                self.logger.info(f"✅ STEP 5 completato: {len(examples)} esempi")
+            except Exception as e:
+                self.logger.error(f"💥 STEP 5 FALLITO: {e}")
+                raise
             
             # 6. Genera configurazione .context-engineer
-            self._create_project_config(project_path, analysis)
+            try:
+                self.logger.info(f"🔍 STEP 6: Creando configurazione...")
+                self._create_project_config(project_path, analysis)
+                self.logger.info(f"✅ STEP 6 completato")
+            except Exception as e:
+                self.logger.error(f"💥 STEP 6 FALLITO: {e}")
+                raise
             
             # 7. Verifica che tutti i file necessari siano stati creati
             verification = self._verify_complete_setup(project_path)
@@ -132,52 +182,150 @@ class ContextEngineerAgent:
             }
             
         except Exception as e:
-            self.logger.error(f"Errore durante setup: {str(e)}")
+            self.logger.error(f"💥 ERRORE CRITICO durante setup: {str(e)}")
+            import traceback
+            self.logger.error(f"Traceback completo: {traceback.format_exc()}")
+            
+            # Crea log file di debug
+            debug_log_path = '/tmp/aigenio_debug.log'
+            try:
+                with open(debug_log_path, 'a', encoding='utf-8') as f:
+                    f.write(f"\n=== CRASH SETUP PROGETTO - {datetime.now()} ===\n")
+                    f.write(f"Project path: {project_path}\n")
+                    f.write(f"Template: {template}\n")
+                    f.write(f"Error: {str(e)}\n")
+                    f.write(f"Traceback:\n{traceback.format_exc()}\n")
+                    f.write("=== END CRASH LOG ===\n\n")
+                
+                self.logger.error(f"📝 Log di debug salvato in: {debug_log_path}")
+            except Exception as log_error:
+                self.logger.error(f"Errore anche nel salvare log: {log_error}")
+            
             return {
                 'status': 'error',
-                'error': str(e)
+                'error': str(e),
+                'debug_log': debug_log_path
             }
     
     def analyze_project(self, project_path: Path) -> Dict[str, Any]:
-        """Analizza progetto esistente"""
+        """Analizza progetto esistente con logging dettagliato"""
         try:
-            self.logger.info(f"Analisi progetto: {project_path}")
+            self.logger.info(f"🔍 INIZIO analisi progetto: {project_path}")
+            
+            # Verifica esistenza e permessi
+            if not project_path.exists():
+                raise FileNotFoundError(f"Path progetto non trovato: {project_path}")
+            
+            if not os.access(project_path, os.R_OK):
+                raise PermissionError(f"Nessun permesso di lettura: {project_path}")
+            
+            self.logger.info(f"✅ Path e permessi verificati")
             
             # Analisi base struttura
-            structure = self.project_analyzer.analyze_structure(project_path)
+            try:
+                self.logger.info(f"🔍 Analizzando struttura progetto...")
+                structure = self.project_analyzer.analyze_structure(project_path)
+                self.logger.info(f"✅ Struttura analizzata: tipo={structure.get('type', 'unknown')}")
+            except Exception as e:
+                self.logger.error(f"💥 ERRORE in analyze_structure: {e}")
+                import traceback
+                self.logger.error(f"Traceback: {traceback.format_exc()}")
+                raise
             
             # Rilevamento framework
-            framework_info = self.framework_detector.detect(project_path)
+            try:
+                self.logger.info(f"🔍 Rilevando framework...")
+                framework_info = self.framework_detector.detect(project_path)
+                self.logger.info(f"✅ Framework rilevato: {framework_info.get('primary', 'unknown')}")
+            except Exception as e:
+                self.logger.error(f"💥 ERRORE in framework_detector: {e}")
+                import traceback
+                self.logger.error(f"Traceback: {traceback.format_exc()}")
+                raise
             
             # Analisi linguaggi
-            languages = self.project_analyzer.detect_languages(project_path)
+            try:
+                self.logger.info(f"🔍 Analizzando linguaggi...")
+                languages = self.project_analyzer.detect_languages(project_path)
+                self.logger.info(f"✅ Linguaggi rilevati: {languages}")
+            except Exception as e:
+                self.logger.error(f"💥 ERRORE in detect_languages: {e}")
+                import traceback
+                self.logger.error(f"Traceback: {traceback.format_exc()}")
+                raise
             
             # Analisi Context Engineering esistente
-            ce_analysis = self._analyze_existing_ce(project_path)
+            try:
+                self.logger.info(f"🔍 Analizzando Context Engineering esistente...")
+                ce_analysis = self._analyze_existing_ce(project_path)
+                self.logger.info(f"✅ CE analysis completato")
+            except Exception as e:
+                self.logger.error(f"💥 ERRORE in _analyze_existing_ce: {e}")
+                import traceback
+                self.logger.error(f"Traceback: {traceback.format_exc()}")
+                raise
             
             # Calcola score generale
-            score = self._calculate_ce_score(project_path, structure, framework_info, ce_analysis)
+            try:
+                self.logger.info(f"🔍 Calcolando score CE...")
+                score = self._calculate_ce_score(project_path, structure, framework_info, ce_analysis)
+                self.logger.info(f"✅ Score calcolato: {score}")
+            except Exception as e:
+                self.logger.error(f"💥 ERRORE in _calculate_ce_score: {e}")
+                import traceback
+                self.logger.error(f"Traceback: {traceback.format_exc()}")
+                raise
             
-            return {
-                'path': str(project_path),
-                'name': project_path.name,
-                'type': structure['type'],
-                'framework': framework_info['primary'],
-                'frameworks_detected': framework_info['all'],
-                'languages': languages,
-                'structure': structure,
-                'ce_score': score,
-                'has_claude_config': (project_path / 'CLAUDE.md').exists(),
-                'has_initial': (project_path / 'INITIAL.md').exists(),
-                'issues': ce_analysis['issues'],
-                'suggestions': ce_analysis['suggestions'],
-                'complexity': structure['complexity'],
-                'files_count': structure['files_count'],
-                'analyzed_at': datetime.now().isoformat()
-            }
+            # Costruzione risultato finale
+            try:
+                self.logger.info(f"🔍 Costruendo risultato analisi...")
+                
+                result = {
+                    'path': str(project_path),
+                    'name': project_path.name,
+                    'type': structure.get('type', 'unknown'),
+                    'framework': framework_info.get('primary', 'unknown'),
+                    'frameworks_detected': framework_info.get('all', []),
+                    'languages': languages if languages else ['unknown'],
+                    'structure': structure,
+                    'ce_score': score if score else 5,
+                    'has_claude_config': (project_path / 'CLAUDE.md').exists(),
+                    'has_initial': (project_path / 'INITIAL.md').exists(),
+                    'issues': ce_analysis.get('issues', []),
+                    'suggestions': ce_analysis.get('suggestions', []),
+                    'complexity': structure.get('complexity', 'medium'),
+                    'files_count': structure.get('files_count', 0),
+                    'analyzed_at': datetime.now().isoformat()
+                }
+                
+                self.logger.info(f"✅ ANALISI COMPLETATA con successo")
+                return result
+                
+            except Exception as e:
+                self.logger.error(f"💥 ERRORE nella costruzione risultato: {e}")
+                import traceback
+                self.logger.error(f"Traceback: {traceback.format_exc()}")
+                raise
             
         except Exception as e:
-            self.logger.error(f"Errore durante analisi: {str(e)}")
+            self.logger.error(f"💥 ERRORE CRITICO durante analisi: {str(e)}")
+            import traceback
+            self.logger.error(f"Traceback completo: {traceback.format_exc()}")
+            
+            # Crea log file di debug
+            debug_log_path = '/tmp/aigenio_debug.log'
+            try:
+                with open(debug_log_path, 'a', encoding='utf-8') as f:
+                    f.write(f"\n=== CRASH ANALISI PROGETTO - {datetime.now()} ===\n")
+                    f.write(f"Project path: {project_path}\n")
+                    f.write(f"Error: {str(e)}\n")
+                    f.write(f"Traceback:\n{traceback.format_exc()}\n")
+                    f.write("=== END CRASH LOG ===\n\n")
+                
+                self.logger.error(f"📝 Log di debug salvato in: {debug_log_path}")
+            except Exception as log_error:
+                self.logger.error(f"Errore anche nel salvare log: {log_error}")
+            
             raise
     
     def generate_feature(self, project_path: Path, feature_description: str, template: Optional[str] = None) -> Dict[str, Any]:
