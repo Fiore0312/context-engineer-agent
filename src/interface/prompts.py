@@ -82,6 +82,10 @@ def ask_new_project_questions() -> Dict:
     
     answers = inquirer.prompt(questions)
     
+    # Check if user cancelled
+    if answers is None:
+        return None
+    
     # Ask for specific frameworks if user wants them
     if answers['has_specific_frameworks']:
         framework_question = inquirer.Text(
@@ -89,6 +93,8 @@ def ask_new_project_questions() -> Dict:
             message="Specifica i framework preferiti (separati da virgola):"
         )
         framework_answer = inquirer.prompt([framework_question])
+        if framework_answer is None:
+            return None
         answers.update(framework_answer)
     
     # Ask about database needs
@@ -101,6 +107,8 @@ def ask_new_project_questions() -> Dict:
     ]
     
     db_answers = inquirer.prompt(database_questions)
+    if db_answers is None:
+        return None
     answers.update(db_answers)
     
     if db_answers['needs_database']:
@@ -120,6 +128,8 @@ def ask_new_project_questions() -> Dict:
             default='auto'
         )
         db_type_answer = inquirer.prompt([db_type_question])
+        if db_type_answer is None:
+            return None
         answers.update(db_type_answer)
     
     # Ask about additional features
@@ -163,6 +173,11 @@ def ask_new_project_questions() -> Dict:
     ]
     
     additional_answers = inquirer.prompt(additional_questions)
+    
+    # Check if user cancelled
+    if additional_answers is None:
+        return None
+        
     answers.update(additional_answers)
     
     return answers
@@ -205,6 +220,10 @@ def ask_existing_project_questions() -> Dict:
     
     answers = inquirer.prompt(questions)
     
+    # Check if user cancelled
+    if answers is None:
+        return None
+    
     # Ask for specific problems if user has them
     if answers['has_specific_problems']:
         problem_question = inquirer.Text(
@@ -212,6 +231,8 @@ def ask_existing_project_questions() -> Dict:
             message="Descrivi i problemi specifici che hai notato:"
         )
         problem_answer = inquirer.prompt([problem_question])
+        if problem_answer is None:
+            return None
         answers.update(problem_answer)
     
     # Additional analysis questions
@@ -257,6 +278,11 @@ def ask_existing_project_questions() -> Dict:
     ]
     
     analysis_answers = inquirer.prompt(analysis_questions)
+    
+    # Check if user cancelled
+    if analysis_answers is None:
+        return None
+        
     answers.update(analysis_answers)
     
     return answers

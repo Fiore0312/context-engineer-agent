@@ -274,6 +274,11 @@ def handle_new_project(ctx):
         # Ask comprehensive questions
         answers = ask_new_project_questions()
         
+        # Check if user cancelled or answers is None
+        if answers is None:
+            print_error("⚠️ Operazione annullata dall'utente")
+            return
+        
         # Get project path
         project_path = click.prompt("Inserisci il percorso del progetto", type=click.Path())
         project_path = Path(project_path).resolve()
@@ -318,6 +323,11 @@ def handle_open_project(ctx):
         
         # Ask questions for existing project
         answers = ask_existing_project_questions()
+        
+        # Check if user cancelled or answers is None
+        if answers is None:
+            print_error("⚠️ Operazione annullata dall'utente")
+            return
         
         # Analyze project
         agent = ContextEngineerAgent(verbose=ctx.obj['verbose'])
