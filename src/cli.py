@@ -288,7 +288,7 @@ def handle_new_project(ctx):
         
         # Setup project with answers
         agent = ContextEngineerAgent(verbose=ctx.obj['verbose'])
-        result = agent.setup_project(project_path, config=answers)
+        result = agent.setup_project(project_path, template=answers.get('template', None))
         
         if result['status'] == 'success':
             print_success("✅ Progetto creato con successo!")
@@ -331,7 +331,7 @@ def handle_open_project(ctx):
         
         # Analyze project
         agent = ContextEngineerAgent(verbose=ctx.obj['verbose'])
-        analysis = agent.analyze_project(project_path, config=answers)
+        analysis = agent.analyze_project(project_path)
         
         print_status(f"📊 Analisi completata per: {project_path}")
         print_status(f"  • Score Context Engineering: {analysis['ce_score']}/10")
