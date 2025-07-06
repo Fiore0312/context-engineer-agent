@@ -88,6 +88,15 @@ class ContextEngineerAgent:
             claude_path = project_path / 'CLAUDE.md'
             claude_path.write_text(claude_config['content'])
             
+            # 3.5. Genera INITIAL.md di default per il progetto
+            initial_content = self.initial_generator.generate(
+                analysis, 
+                f"Setup iniziale progetto {analysis['name']}", 
+                template
+            )
+            initial_path = project_path / 'INITIAL.md'
+            initial_path.write_text(initial_content['content'])
+            
             # 4. Crea struttura directories se necessaria
             self._create_project_structure(project_path, analysis)
             
@@ -97,10 +106,15 @@ class ContextEngineerAgent:
             # 6. Genera configurazione .context-engineer
             self._create_project_config(project_path, analysis)
             
-            # 7. Valida setup
+            # 7. Verifica che tutti i file necessari siano stati creati
+            verification = self._verify_complete_setup(project_path)
+            if not verification['success']:
+                self.logger.warning(f"Setup incompleto: {verification['missing_files']}")
+            
+            # 8. Valida setup
             validation = self.validator.validate_setup(project_path)
             
-            # 8. Aggiorna database progetti
+            # 9. Aggiorna database progetti
             self._update_project_db(project_path, analysis, validation['score'])
             
             return {
@@ -110,6 +124,7 @@ class ContextEngineerAgent:
                 'score': validation['score'],
                 'files_created': [
                     str(claude_path),
+                    str(initial_path),
                     *examples,
                     str(project_path / '.context-engineer' / 'config.json')
                 ],
@@ -418,3 +433,59 @@ class ContextEngineerAgent:
             recommendations.append("Considerare suddivisione in moduli più piccoli")
         
         return recommendations
+    
+    def _verify_complete_setup(self, project_path: Path) -> Dict[str, Any]:
+        """Verifica che tutti i file necessari siano stati creati"""
+        required_files = {
+            'CLAUDE.md': 'Regole e istruzioni per AI assistant',
+            'INITIAL.md': 'Feature request iniziale per il progetto'
+        }
+        
+        missing_files = []
+        existing_files = []
+        
+        for file_name, description in required_files.items():
+            file_path = project_path / file_name
+            if file_path.exists() and file_path.stat().st_size > 0:
+                existing_files.append({
+                    'name': file_name,
+                    'path': str(file_path),
+                    'size': file_path.stat().st_size,
+                    'description': description
+                })
+                self.logger.info(f"✅ {file_name} creato correttamente ({file_path.stat().st_size} bytes)")
+            else:
+                missing_files.append({
+                    'name': file_name,
+                    'description': description,
+                    'expected_path': str(file_path)
+                })
+                self.logger.error(f"❌ {file_name} mancante o vuoto")
+        
+        # Verifica opzionali utili
+        optional_files = {
+            'README.md': 'Documentazione del progetto',
+            '.env.example': 'Template variabili ambiente'
+        }
+        
+        optional_existing = []
+        for file_name, description in optional_files.items():
+            file_path = project_path / file_name
+            if file_path.exists():
+                optional_existing.append({
+                    'name': file_name,
+                    'description': description
+                })
+        
+        success = len(missing_files) == 0
+        
+        return {
+            'success': success,
+            'required_files': required_files,
+            'existing_files': existing_files,
+            'missing_files': missing_files,
+            'optional_existing': optional_existing,
+            'verification_status': 'complete' if success else 'incomplete',
+            'total_required': len(required_files),
+            'total_existing': len(existing_files)
+        }

@@ -319,11 +319,33 @@ def handle_new_project(ctx):
             print_success("✅ Progetto creato con successo!")
             logger.info("Project setup completed successfully")
             
+            # Show created files
+            if 'files_created' in result:
+                print_status("\n📁 File creati:")
+                for file_path in result['files_created']:
+                    file_name = Path(file_path).name
+                    print_status(f"  • ✅ {file_name}")
+                    
+                # Verify critical files
+                claude_exists = any('CLAUDE.md' in f for f in result['files_created'])
+                initial_exists = any('INITIAL.md' in f for f in result['files_created'])
+                
+                if claude_exists and initial_exists:
+                    print_success("\n✅ Tutti i file critici creati correttamente!")
+                    print_status("🚀 Pronto per Claude Code!")
+                else:
+                    if not claude_exists:
+                        print_error("⚠️  CLAUDE.md mancante")
+                    if not initial_exists:
+                        print_error("⚠️  INITIAL.md mancante")
+            
             next_steps = [
-                "Rivedi i file CLAUDE.md e INITIAL.md generati",
-                "Configura l'ambiente di sviluppo",
-                "Inizia a sviluppare seguendo le best practices",
-                "Usa 'python -m src.cli validate' per verificare la configurazione"
+                f"cd {project_path}",
+                "claude",
+                "Rivedi CLAUDE.md per le regole AI",
+                "Rivedi INITIAL.md per la feature iniziale",
+                "/generate-prp INITIAL.md",
+                "Implementa la feature seguendo i PRP generati"
             ]
             
             if answers.get('use_git_integration'):
