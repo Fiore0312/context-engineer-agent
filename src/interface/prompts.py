@@ -369,6 +369,10 @@ def ask_preferences_questions() -> Dict:
     
     answers = inquirer.prompt(questions)
     
+    # Check if user cancelled
+    if answers is None:
+        return None
+    
     return answers
 
 def ask_git_configuration() -> Dict:
@@ -416,6 +420,10 @@ def ask_git_configuration() -> Dict:
     
     answers = inquirer.prompt(questions)
     
+    # Check if user cancelled
+    if answers is None:
+        return None
+    
     return answers
 
 def show_summary(answers: Dict, title: str = "Riepilogo Configurazione"):
@@ -445,4 +453,9 @@ def confirm_proceed(message: str = "Vuoi procedere con questa configurazione?") 
     
     question = inquirer.Confirm('confirm', message=message, default=True)
     answer = inquirer.prompt([question])
+    
+    # Check if user cancelled
+    if answer is None:
+        return False
+        
     return answer['confirm']
