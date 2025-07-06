@@ -51,36 +51,31 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-REM Check if Python dependencies are installed
-echo 📦 Verifica dipendenze Python...
-wsl bash -c "cd %AIGENIO_PATH% && python3 -c 'import click, rich, inquirer' 2>/dev/null"
+echo 📦 Verifica ambiente virtuale Python...
+wsl bash -c "cd %AIGENIO_PATH% && test -d venv"
 if %errorlevel% neq 0 (
-    echo ⚠️ Dipendenze Python mancanti. Installazione in corso...
-    echo.
-    
-    REM First ensure pip3 is available
-    wsl bash -c "command -v pip3"
+    echo 🔧 Creazione ambiente virtuale...
+    wsl bash -c "cd %AIGENIO_PATH% && python3 -m venv venv"
     if %errorlevel% neq 0 (
-        echo 📦 Installazione pip3...
-        wsl bash -c "sudo apt update && sudo apt install -y python3-pip"
+        echo 📦 Installazione python3-venv...
+        wsl bash -c "sudo apt update && sudo apt install -y python3-venv"
+        echo 🔧 Ripetendo creazione ambiente virtuale...
+        wsl bash -c "cd %AIGENIO_PATH% && python3 -m venv venv"
     )
-    
-    REM Install requirements
-    wsl bash -c "cd %AIGENIO_PATH% && pip3 install --user -r requirements.txt"
+    echo ✅ Ambiente virtuale creato!
+)
+
+echo 📦 Attivazione ambiente e verifica dipendenze...
+wsl bash -c "cd %AIGENIO_PATH% && source venv/bin/activate && python -c 'import click, rich, inquirer' 2>/dev/null"
+if %errorlevel% neq 0 (
+    echo ⚠️ Installazione dipendenze nell'ambiente virtuale...
+    wsl bash -c "cd %AIGENIO_PATH% && source venv/bin/activate && pip install -r requirements.txt"
     if %errorlevel% neq 0 (
-        echo ❌ Errore durante l'installazione delle dipendenze!
-        echo.
-        echo Risoluzione problemi:
-        echo 1. Assicurati che Python3 e pip3 siano installati in WSL
-        echo 2. Esegui manualmente: wsl
-        echo 3. Poi: cd %AIGENIO_PATH%
-        echo 4. Poi: pip3 install --user -r requirements.txt
-        echo.
+        echo ❌ Errore installazione dipendenze!
         pause
         exit /b 1
     )
-    echo ✅ Dipendenze installate con successo!
-    echo.
+    echo ✅ Dipendenze installate!
 )
 
 REM Launch AiGENIO interactive menu
@@ -93,7 +88,7 @@ echo 3. Seleziona o crea il tuo primo progetto
 echo.
 
 REM Start AiGENIO in WSL with proper environment
-wsl bash -c "cd %AIGENIO_PATH% && export PYTHONPATH=%AIGENIO_PATH%/src && python3 src/cli.py"
+wsl bash -c "cd %AIGENIO_PATH% && source venv/bin/activate && export PYTHONPATH=%AIGENIO_PATH%/src && python src/cli.py"
 
 REM Check exit code
 if %errorlevel% neq 0 (
