@@ -76,7 +76,7 @@ def ask_new_project_questions() -> Dict:
         inquirer.Confirm(
             'has_specific_frameworks',
             message="Hai framework specifici in mente?",
-            default=False
+            default=True
         )
     ]
     
@@ -214,7 +214,7 @@ def ask_existing_project_questions() -> Dict:
         inquirer.Confirm(
             'has_specific_problems',
             message="Ci sono problemi specifici che hai notato?",
-            default=False
+            default=True
         )
     ]
     
@@ -389,7 +389,7 @@ def ask_git_configuration() -> Dict:
         inquirer.Confirm(
             'has_github_token',
             message="Hai già un token GitHub personale?",
-            default=False
+            default=True
         ),
         inquirer.Text(
             'github_username',
