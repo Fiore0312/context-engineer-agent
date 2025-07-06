@@ -7,6 +7,7 @@ Automatizza setup e gestione Context Engineering per tutti i progetti
 import click
 import json
 import sys
+import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
@@ -14,6 +15,13 @@ from datetime import datetime
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Configure logging for better debugging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 from agent import ContextEngineerAgent
 from utils import setup_logging, print_status, print_error, print_success
@@ -271,13 +279,24 @@ def menu(ctx):
 def handle_new_project(ctx):
     """Gestisce la creazione di un nuovo progetto"""
     try:
+        logger.info("Starting new project creation workflow")
+        
         # Ask comprehensive questions
         answers = ask_new_project_questions()
         
         # Check if user cancelled or answers is None
         if answers is None:
             print_error("⚠️ Operazione annullata dall'utente")
+            logger.info("User cancelled new project creation")
             return
+        
+        # Validate answers structure
+        if not isinstance(answers, dict) or not answers:
+            print_error("❌ Formato risposte non valido")
+            logger.error(f"Invalid answers format: {type(answers)}")
+            return
+        
+        logger.info(f"Received {len(answers)} answers from user")
         
         # Get project path
         project_path = click.prompt("Inserisci il percorso del progetto", type=click.Path())
@@ -287,11 +306,18 @@ def handle_new_project(ctx):
         project_path.mkdir(parents=True, exist_ok=True)
         
         # Setup project with answers
+        logger.info(f"Setting up project at: {project_path}")
         agent = ContextEngineerAgent(verbose=ctx.obj['verbose'])
-        result = agent.setup_project(project_path, template=answers.get('template', None))
         
-        if result['status'] == 'success':
+        # Extract template safely
+        template = answers.get('template', None)
+        logger.info(f"Using template: {template}")
+        
+        result = agent.setup_project(project_path, template=template)
+        
+        if result and result.get('status') == 'success':
             print_success("✅ Progetto creato con successo!")
+            logger.info("Project setup completed successfully")
             
             next_steps = [
                 "Rivedi i file CLAUDE.md e INITIAL.md generati",
@@ -305,7 +331,9 @@ def handle_new_project(ctx):
             
             show_next_steps(next_steps)
         else:
-            print_error(f"❌ Creazione progetto fallita: {result.get('error', 'Unknown error')}")
+            error_msg = result.get('error', 'Unknown error') if result else 'Setup returned None'
+            print_error(f"❌ Creazione progetto fallita: {error_msg}")
+            logger.error(f"Project setup failed: {error_msg}")
             
     except Exception as e:
         print_error(f"❌ Errore durante creazione progetto: {str(e)}")
@@ -317,9 +345,12 @@ def handle_new_project(ctx):
 def handle_open_project(ctx):
     """Gestisce l'apertura di un progetto esistente"""
     try:
+        logger.info("Starting existing project analysis workflow")
+        
         # Ask for project path
         project_path = click.prompt("Inserisci il percorso del progetto", type=click.Path(exists=True))
         project_path = Path(project_path).resolve()
+        logger.info(f"Project path: {project_path}")
         
         # Ask questions for existing project
         answers = ask_existing_project_questions()
@@ -327,14 +358,33 @@ def handle_open_project(ctx):
         # Check if user cancelled or answers is None
         if answers is None:
             print_error("⚠️ Operazione annullata dall'utente")
+            logger.info("User cancelled project analysis")
             return
         
+        # Validate answers structure
+        if not isinstance(answers, dict) or not answers:
+            print_error("❌ Formato risposte non valido")
+            logger.error(f"Invalid answers format: {type(answers)}")
+            return
+        
+        logger.info(f"Received {len(answers)} answers from user")
+        
         # Analyze project
+        logger.info(f"Starting project analysis for: {project_path}")
         agent = ContextEngineerAgent(verbose=ctx.obj['verbose'])
         analysis = agent.analyze_project(project_path)
         
+        # Validate analysis result
+        if not analysis:
+            print_error("❌ Analisi progetto fallita")
+            logger.error("Project analysis returned None")
+            return
+        
+        logger.info("Project analysis completed successfully")
+        
         print_status(f"📊 Analisi completata per: {project_path}")
-        print_status(f"  • Score Context Engineering: {analysis['ce_score']}/10")
+        ce_score = analysis.get('ce_score', 'N/A')
+        print_status(f"  • Score Context Engineering: {ce_score}/10")
         
         if analysis['suggestions']:
             print_status(f"\n💡 Suggerimenti:")

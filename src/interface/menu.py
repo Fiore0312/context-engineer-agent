@@ -3,12 +3,15 @@ Enhanced CLI menu with ASCII art for AiGENIO by Franco
 """
 
 import os
+import logging
 from rich.console import Console
 from rich.panel import Panel
 from rich.align import Align
 from rich.text import Text
+from typing import Optional, Dict
 
 console = Console()
+logger = logging.getLogger(__name__)
 
 def show_ascii_art():
     """Display the main banner for AiGENIO by Franco"""
@@ -51,7 +54,9 @@ def get_menu_choice():
                          )
         ]
         
-        answers = inquirer.prompt(questions)
+        # Import the safe_prompt from prompts.py
+        from .prompts import safe_prompt
+        answers = safe_prompt(questions)
         
         if answers is None:  # User pressed Ctrl+C
             console.print("\n👋 Arrivederci!", style="bold yellow")

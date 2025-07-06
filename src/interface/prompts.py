@@ -3,12 +3,38 @@ Advanced interactive prompts for project configuration
 """
 
 import inquirer
+import logging
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 from typing import Dict, List, Optional
 
 console = Console()
+logger = logging.getLogger(__name__)
+
+def safe_prompt(questions) -> Optional[Dict]:
+    """Wrapper sicuro per inquirer.prompt() che gestisce None e interruzioni"""
+    try:
+        answers = inquirer.prompt(questions)
+        
+        if answers is None:
+            console.print("\n⚠️  Operazione annullata dall'utente")
+            return None
+        
+        if not answers:
+            console.print("\n⚠️  Nessuna risposta raccolta")
+            return None
+            
+        logger.info(f"Raccolte {len(answers)} risposte con successo")
+        return answers
+        
+    except KeyboardInterrupt:
+        console.print("\n⚠️  Interrotto dall'utente (Ctrl+C)")
+        return None
+    except Exception as e:
+        console.print(f"\n❌ Errore durante la raccolta risposte: {e}")
+        logger.error(f"Error in safe_prompt: {e}")
+        return None
 
 def ask_new_project_questions() -> Dict:
     """Ask comprehensive questions for new project setup"""
@@ -80,10 +106,11 @@ def ask_new_project_questions() -> Dict:
         )
     ]
     
-    answers = inquirer.prompt(questions)
+    answers = safe_prompt(questions)
     
     # Check if user cancelled
     if answers is None:
+        console.print("🔄 Ritornando al menu principale...")
         return None
     
     # Ask for specific frameworks if user wants them
@@ -92,8 +119,9 @@ def ask_new_project_questions() -> Dict:
             'preferred_frameworks',
             message="Specifica i framework preferiti (separati da virgola):"
         )
-        framework_answer = inquirer.prompt([framework_question])
+        framework_answer = safe_prompt([framework_question])
         if framework_answer is None:
+            console.print("🔄 Ritornando al menu principale...")
             return None
         answers.update(framework_answer)
     
@@ -106,8 +134,9 @@ def ask_new_project_questions() -> Dict:
         )
     ]
     
-    db_answers = inquirer.prompt(database_questions)
+    db_answers = safe_prompt(database_questions)
     if db_answers is None:
+        console.print("🔄 Ritornando al menu principale...")
         return None
     answers.update(db_answers)
     
@@ -127,8 +156,9 @@ def ask_new_project_questions() -> Dict:
             ],
             default='auto'
         )
-        db_type_answer = inquirer.prompt([db_type_question])
+        db_type_answer = safe_prompt([db_type_question])
         if db_type_answer is None:
+            console.print("🔄 Ritornando al menu principale...")
             return None
         answers.update(db_type_answer)
     
@@ -172,10 +202,11 @@ def ask_new_project_questions() -> Dict:
         )
     ]
     
-    additional_answers = inquirer.prompt(additional_questions)
+    additional_answers = safe_prompt(additional_questions)
     
     # Check if user cancelled
     if additional_answers is None:
+        console.print("🔄 Ritornando al menu principale...")
         return None
         
     answers.update(additional_answers)
@@ -218,10 +249,11 @@ def ask_existing_project_questions() -> Dict:
         )
     ]
     
-    answers = inquirer.prompt(questions)
+    answers = safe_prompt(questions)
     
     # Check if user cancelled
     if answers is None:
+        console.print("🔄 Ritornando al menu principale...")
         return None
     
     # Ask for specific problems if user has them
@@ -230,8 +262,9 @@ def ask_existing_project_questions() -> Dict:
             'specific_problems',
             message="Descrivi i problemi specifici che hai notato:"
         )
-        problem_answer = inquirer.prompt([problem_question])
+        problem_answer = safe_prompt([problem_question])
         if problem_answer is None:
+            console.print("🔄 Ritornando al menu principale...")
             return None
         answers.update(problem_answer)
     
@@ -277,10 +310,11 @@ def ask_existing_project_questions() -> Dict:
         )
     ]
     
-    analysis_answers = inquirer.prompt(analysis_questions)
+    analysis_answers = safe_prompt(analysis_questions)
     
     # Check if user cancelled
     if analysis_answers is None:
+        console.print("🔄 Ritornando al menu principale...")
         return None
         
     answers.update(analysis_answers)
@@ -367,10 +401,11 @@ def ask_preferences_questions() -> Dict:
         )
     ]
     
-    answers = inquirer.prompt(questions)
+    answers = safe_prompt(questions)
     
     # Check if user cancelled
     if answers is None:
+        console.print("🔄 Ritornando al menu principale...")
         return None
     
     return answers
@@ -418,10 +453,11 @@ def ask_git_configuration() -> Dict:
         )
     ]
     
-    answers = inquirer.prompt(questions)
+    answers = safe_prompt(questions)
     
     # Check if user cancelled
     if answers is None:
+        console.print("🔄 Ritornando al menu principale...")
         return None
     
     return answers
@@ -452,7 +488,7 @@ def confirm_proceed(message: str = "Vuoi procedere con questa configurazione?") 
     """Ask user to confirm before proceeding"""
     
     question = inquirer.Confirm('confirm', message=message, default=True)
-    answer = inquirer.prompt([question])
+    answer = safe_prompt([question])
     
     # Check if user cancelled
     if answer is None:
