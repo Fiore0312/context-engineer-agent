@@ -55,8 +55,8 @@ Production-ready project with automatic Git backup
 
 ```bash
 # Clone the repository
-git clone https://github.com/Fiore0312/aigenio.git
-cd aigenio
+gh repo clone Fiore0312/context-engineer-agent
+cd context-engineer-agent
 
 # Install dependencies
 pip install -r requirements.txt
