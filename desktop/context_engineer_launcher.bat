@@ -26,10 +26,10 @@ if %errorlevel% neq 0 (
 
 REM Display banner
 echo.
-echo ╔═══════════════════════════════════════════════════════════════╗
-echo ║                        AiGENIO by Franco                       ║
-echo ║                🤖 AI-Powered Context Engineering Assistant      ║
-echo ╚═══════════════════════════════════════════════════════════════╝
+echo ╔══════════════════════════════════════════════════════════════╗
+echo ║                    AiGENIO by Franco                     ║
+echo ║        🤖 AI-Powered Context Engineering Assistant       ║
+echo ╚══════════════════════════════════════════════════════════════╝
 echo.
 echo 🚀 Avvio AiGENIO in WSL...
 echo.
@@ -53,17 +53,28 @@ if %errorlevel% neq 0 (
 
 REM Check if Python dependencies are installed
 echo 📦 Verifica dipendenze Python...
-wsl cd "%AIGENIO_PATH%" ^&^& python3 -c "import click, rich, inquirer" 2>nul
+wsl bash -c "cd %AIGENIO_PATH% && python3 -c 'import click, rich, inquirer' 2>/dev/null"
 if %errorlevel% neq 0 (
     echo ⚠️ Dipendenze Python mancanti. Installazione in corso...
     echo.
-    wsl cd "%AIGENIO_PATH%" ^&^& pip3 install -r requirements.txt
+    
+    REM First ensure pip3 is available
+    wsl bash -c "command -v pip3"
+    if %errorlevel% neq 0 (
+        echo 📦 Installazione pip3...
+        wsl bash -c "sudo apt update && sudo apt install -y python3-pip"
+    )
+    
+    REM Install requirements
+    wsl bash -c "cd %AIGENIO_PATH% && pip3 install --user -r requirements.txt"
     if %errorlevel% neq 0 (
         echo ❌ Errore durante l'installazione delle dipendenze!
         echo.
         echo Risoluzione problemi:
         echo 1. Assicurati che Python3 e pip3 siano installati in WSL
-        echo 2. Esegui manualmente: wsl cd "%AIGENIO_PATH%" ^&^& pip3 install -r requirements.txt
+        echo 2. Esegui manualmente: wsl
+        echo 3. Poi: cd %AIGENIO_PATH%
+        echo 4. Poi: pip3 install --user -r requirements.txt
         echo.
         pause
         exit /b 1
@@ -81,8 +92,8 @@ echo 2. Imposta l'integrazione GitHub (opzionale)
 echo 3. Seleziona o crea il tuo primo progetto
 echo.
 
-REM Start AiGENIO in WSL with proper Python path
-wsl cd "%AIGENIO_PATH%" ^&^& PYTHONPATH=/home/franco/context-engineer-agent/src python3 src/cli.py
+REM Start AiGENIO in WSL with proper environment
+wsl bash -c "cd %AIGENIO_PATH% && export PYTHONPATH=%AIGENIO_PATH%/src && python3 src/cli.py"
 
 REM Check exit code
 if %errorlevel% neq 0 (
@@ -93,7 +104,9 @@ if %errorlevel% neq 0 (
     echo 1. Verifica che tutti i file di AiGENIO siano presenti
     echo 2. Controlla i permessi del file
     echo 3. Esegui manualmente per vedere errori dettagliati:
-    echo    wsl cd "%AIGENIO_PATH%" ^&^& python3 src/cli.py --debug
+    echo    wsl
+    echo    cd %AIGENIO_PATH%
+    echo    python3 src/cli.py --debug
     echo.
     pause
     exit /b 1
@@ -112,9 +125,5 @@ echo.
 REM Option to keep window open
 echo Premi un tasto per chiudere questa finestra...
 pause >nul
-
-REM Optional: Launch file explorer to project directory
-REM Uncomment the next line to open the project directory in Windows Explorer
-REM explorer "\\wsl$\Ubuntu\home\franco\context-engineer-agent"
 
 exit /b 0
