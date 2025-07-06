@@ -1,0 +1,91 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-01-06T00:00:00",
+  "mcp_endpoints": [
+    "context-engineering-best-practices",
+    "software-architecture-patterns",
+    "security-guidelines"
+  ],
+  "cached_practices": {
+    "php_laravel": {
+      "best_practices": [
+        {
+          "id": "php_laravel_structure",
+          "title": "Struttura Standard Laravel",
+          "description": "Organizzazione standard dei file e directory in un progetto Laravel",
+          "category": "architecture",
+          "language": "php",
+          "framework": "laravel",
+          "confidence": 0.95,
+          "source": "mcp"
+        },
+        {
+          "id": "php_laravel_security",
+          "title": "Sicurezza Laravel",
+          "description": "Best practices di sicurezza per applicazioni Laravel",
+          "category": "security",
+          "language": "php", 
+          "framework": "laravel",
+          "confidence": 0.98,
+          "source": "mcp"
+        }
+      ],
+      "last_fetched": "2025-01-06T00:00:00"
+    },
+    "javascript_react": {
+      "best_practices": [
+        {
+          "id": "react_component_structure",
+          "title": "Struttura Componenti React",
+          "description": "Organizzazione e naming dei componenti React",
+          "category": "architecture",
+          "language": "javascript",
+          "framework": "react",
+          "confidence": 0.92,
+          "source": "mcp"
+        },
+        {
+          "id": "react_performance",
+          "title": "Ottimizzazione Performance React",
+          "description": "Tecniche per ottimizzare le performance in React",
+          "category": "performance",
+          "language": "javascript",
+          "framework": "react", 
+          "confidence": 0.89,
+          "source": "mcp"
+        }
+      ],
+      "last_fetched": "2025-01-06T00:00:00"
+    },
+    "python_django": {
+      "best_practices": [
+        {
+          "id": "django_project_structure",
+          "title": "Struttura Progetto Django",
+          "description": "Organizzazione standard per progetti Django",
+          "category": "architecture",
+          "language": "python",
+          "framework": "django",
+          "confidence": 0.94,
+          "source": "mcp"
+        },
+        {
+          "id": "django_security",
+          "title": "Sicurezza Django",
+          "description": "Configurazioni di sicurezza essenziali per Django",
+          "category": "security", 
+          "language": "python",
+          "framework": "django",
+          "confidence": 0.96,
+          "source": "mcp"
+        }
+      ],
+      "last_fetched": "2025-01-06T00:00:00"
+    }
+  },
+  "cache_settings": {
+    "max_age_hours": 24,
+    "auto_refresh": true,
+    "max_entries": 100
+  }
+}

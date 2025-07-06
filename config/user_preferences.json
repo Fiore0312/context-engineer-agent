@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "created_at": "2025-01-06T00:00:00",
+  "last_updated": "2025-01-06T00:00:00",
+  "user_info": {
+    "name": "",
+    "email": "",
+    "github_username": ""
+  },
+  "programming": {
+    "favorite_languages": [
+      "python",
+      "javascript",
+      "php"
+    ],
+    "favorite_frameworks": [
+      "react",
+      "laravel",
+      "django"
+    ],
+    "coding_style": "pragmatic",
+    "project_structure_preference": "modular"
+  },
+  "interface": {
+    "theme": "default",
+    "show_welcome_message": true,
+    "auto_clear_screen": true
+  },
+  "integrations": {
+    "auto_git_backup": true,
+    "use_mcp_by_default": true,
+    "backup_frequency": "session"
+  },
+  "directories": {
+    "default_project_paths": [
+      "/mnt/c/xampp/htdocs",
+      "/mnt/c/Users/*/Desktop",
+      "/mnt/c/progetti",
+      "~/projects"
+    ],
+    "scan_subdirectories": true
+  },
+  "notifications": {
+    "show_suggestions": true,
+    "show_next_steps": true,
+    "show_tips": true
+  }
+}
