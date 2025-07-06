@@ -8,6 +8,7 @@ import click
 import json
 import sys
 import logging
+import os
 from pathlib import Path
 from typing import Dict, Any, Optional
 from datetime import datetime
@@ -265,25 +266,66 @@ def templates(ctx):
 @cli.command()
 @click.pass_context
 def menu(ctx):
-    """Avvia il menu interattivo principale"""
+    """Avvia il menu interattivo principale con logging dettagliato"""
     try:
+        logger.info("🎨 INIZIO menu interattivo")
+        
         while True:
-            show_main_menu()
-            choice = get_menu_choice()
-            
-            if choice is None:  # User chose to exit
-                break
-            elif choice == 1:  # Nuovo Progetto
-                handle_new_project(ctx)
-            elif choice == 2:  # Apri Progetto
-                handle_open_project(ctx)
-            elif choice == 3:  # Lista Comandi
-                show_command_list()
+            try:
+                logger.info("🔍 MENU: Mostrando menu principale...")
+                show_main_menu()
+                
+                logger.info("🔍 MENU: Raccogliendo scelta utente...")
+                choice = get_menu_choice()
+                logger.info(f"✅ MENU: Scelta ricevuta: {choice}")
+                
+                if choice is None:  # User chose to exit
+                    logger.info("👋 MENU: Utente ha scelto di uscire")
+                    break
+                elif choice == 1:  # Nuovo Progetto
+                    logger.info("🔍 MENU: Avviando handle_new_project...")
+                    handle_new_project(ctx)
+                    logger.info("✅ MENU: handle_new_project completato")
+                elif choice == 2:  # Apri Progetto
+                    logger.info("🔍 MENU: Avviando handle_open_project...")
+                    handle_open_project(ctx)
+                    logger.info("✅ MENU: handle_open_project completato")
+                elif choice == 3:  # Lista Comandi
+                    logger.info("🔍 MENU: Mostrando lista comandi...")
+                    show_command_list()
+                    logger.info("✅ MENU: Lista comandi completata")
+                    
+                logger.info("🔄 MENU: Ritornando al loop principale...")
+                
+            except Exception as menu_error:
+                logger.error(f"💥 ERRORE nel loop menu: {menu_error}")
+                import traceback
+                logger.error(f"Traceback: {traceback.format_exc()}")
+                # Continue the loop instead of breaking
+                print_error(f"❌ Errore nel menu: {menu_error}")
+                print_error("Ritentando...")
+                continue
                 
     except Exception as e:
+        logger.error(f"💥 ERRORE CRITICO nel menu principale: {str(e)}")
+        import traceback
+        logger.error(f"Traceback completo: {traceback.format_exc()}")
+        
+        # Save debug log
+        debug_log_path = '/tmp/aigenio_debug.log'
+        try:
+            with open(debug_log_path, 'a', encoding='utf-8') as f:
+                f.write(f"\n=== CRASH MENU PRINCIPALE - {datetime.now()} ===\n")
+                f.write(f"Error: {str(e)}\n")
+                f.write(f"Traceback:\n{traceback.format_exc()}\n")
+                f.write("=== END CRASH LOG ===\n\n")
+        except Exception:
+            pass
+        
         print_error(f"❌ Errore nel menu: {str(e)}")
+        print_error(f"📝 Log dettagliato salvato in: {debug_log_path}")
+        
         if ctx.obj['debug']:
-            import traceback
             traceback.print_exc()
 
 
@@ -450,30 +492,76 @@ def handle_open_project(ctx):
         
         logger.info("Project analysis completed successfully")
         
-        print_status(f"📊 Analisi completata per: {project_path}")
-        ce_score = analysis.get('ce_score', 'N/A')
-        print_status(f"  • Score Context Engineering: {ce_score}/10")
+        # Safe display of analysis results
+        try:
+            logger.info("🔍 STEP F: Mostrando risultati analisi...")
+            print_status(f"📊 Analisi completata per: {project_path}")
+            
+            ce_score = analysis.get('ce_score', 'N/A')
+            print_status(f"  • Score Context Engineering: {ce_score}/10")
+            
+            # Safe access to suggestions
+            suggestions = analysis.get('suggestions', [])
+            logger.info(f"Suggestions found: {len(suggestions)}")
+            
+            if suggestions and len(suggestions) > 0:
+                print_status(f"\n💡 Suggerimenti:")
+                for suggestion in suggestions:
+                    print_status(f"  • {suggestion}")
+            else:
+                logger.info("No suggestions to display")
+                
+            logger.info("✅ STEP F completato")
+            
+        except Exception as e:
+            logger.error(f"💥 STEP F FALLITO: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise
         
-        if analysis['suggestions']:
-            print_status(f"\n💡 Suggerimenti:")
-            for suggestion in analysis['suggestions']:
-                print_status(f"  • {suggestion}")
-        
-        next_steps = [
-            "Rivedi i suggerimenti di miglioramento",
-            "Implementa le correzioni consigliate",
-            "Riesegui l'analisi per verificare i miglioramenti"
-        ]
-        
-        if answers.get('generate_improvement_plan'):
-            next_steps.append("Genera un piano di miglioramento dettagliato")
-        
-        show_next_steps(next_steps)
+        # Safe generation of next steps
+        try:
+            logger.info("🔍 STEP G: Generando next steps...")
+            
+            next_steps = [
+                "Rivedi i suggerimenti di miglioramento",
+                "Implementa le correzioni consigliate",
+                "Riesegui l'analisi per verificare i miglioramenti"
+            ]
+            
+            # Safe access to answers
+            if answers and answers.get('generate_improvement_plan'):
+                next_steps.append("Genera un piano di miglioramento dettagliato")
+            
+            show_next_steps(next_steps)
+            logger.info("✅ STEP G completato")
+            
+        except Exception as e:
+            logger.error(f"💥 STEP G FALLITO: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise
         
     except Exception as e:
+        logger.error(f"💥 ERRORE CRITICO in handle_open_project: {str(e)}")
+        import traceback
+        logger.error(f"Traceback completo: {traceback.format_exc()}")
+        
+        # Save detailed debug log
+        debug_log_path = '/tmp/aigenio_debug.log'
+        try:
+            with open(debug_log_path, 'a', encoding='utf-8') as f:
+                f.write(f"\n=== CRASH HANDLE_OPEN_PROJECT - {datetime.now()} ===\n")
+                f.write(f"Error: {str(e)}\n")
+                f.write(f"Traceback:\n{traceback.format_exc()}\n")
+                f.write("=== END CRASH LOG ===\n\n")
+        except Exception:
+            pass
+        
         print_error(f"❌ Errore durante apertura progetto: {str(e)}")
+        print_error(f"📝 Log dettagliato salvato in: {debug_log_path}")
+        
         if ctx.obj['debug']:
-            import traceback
             traceback.print_exc()
 
 
