@@ -13,16 +13,12 @@ AiGENIO is an intelligent meta-agent that learns your development preferences an
 
 ### 🖥️ **Intelligent Interface**
 ```
-╔═══════════════════════════════════════════════════════════════╗
-║                        AiGENIO by Franco                       ║
-║                🤖 AI-Powered Context Engineering Assistant      ║
-╚═══════════════════════════════════════════════════════════════╝
-
-┌─────────────────────────────────────────────────────────────────┐
-│  1. 🆕 Nuovo Progetto                                            │
-│  2. 📂 Apri Progetto                                             │
-│  3. 📋 Lista Comandi                                             │
-└─────────────────────────────────────────────────────────────────┘
+                            AiGENIO by Franco
+             🤖 AI-Powered Context Engineering Assistant
+-----------------------------------------------------------------
+  1. 🆕 Nuovo Progetto
+  2. 📂 Apri Progetto
+  3. 📋 Lista Comandi
 ```
 
 ### 🧠 **Persistent Learning System**
@@ -55,8 +51,8 @@ Production-ready project with automatic Git backup
 
 ```bash
 # Clone the repository
-git clone https://github.com/francouser/aigenio.git
-cd aigenio
+git clone https://github.com/Fiore0312/context-engineer-agent
+cd context-engineer-agent
 
 # Install dependencies
 pip install -r requirements.txt
