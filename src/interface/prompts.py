@@ -2,7 +2,13 @@
 Advanced interactive prompts for project configuration
 """
 
-import inquirer
+try:
+    import inquirer
+    INQUIRER_AVAILABLE = True
+except ImportError:
+    INQUIRER_AVAILABLE = False
+    inquirer = None
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -19,6 +25,16 @@ def ask_new_project_questions() -> Dict:
         title="[bold blue]Setup Progetto[/bold blue]",
         border_style="blue"
     ))
+    
+    if not INQUIRER_AVAILABLE:
+        console.print("⚠️ Inquirer non disponibile, usando configurazione di default")
+        return {
+            'project_type': 'web',
+            'language_preference': 'python',
+            'framework_choice': 'auto',
+            'database_needed': True,
+            'use_git_integration': True
+        }
     
     questions = [
         inquirer.List(
@@ -176,6 +192,15 @@ def ask_existing_project_questions() -> Dict:
         title="[bold green]Analisi Progetto[/bold green]",
         border_style="green"
     ))
+    
+    if not INQUIRER_AVAILABLE:
+        console.print("⚠️ Inquirer non disponibile, usando configurazione di default")
+        return {
+            'improvement_goal': 'general_improvement',
+            'analyze_best_practices': True,
+            'check_dependencies': True,
+            'generate_improvement_plan': True
+        }
     
     questions = [
         inquirer.List(
